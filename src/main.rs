@@ -1,5 +1,10 @@
-use meval::eval_str;
 use std::io::{self, Write};
+
+mod parse_expression;
+mod valid_expression;
+
+use parse_expression::{evaluate, parse_expression};
+use valid_expression::valid_expression;
 
 fn main() {
     println!("Calculadora Inteligente");
@@ -17,14 +22,24 @@ fn main() {
             break;
         }
 
-        match calcular_e_exibir_passos(input) {
-            Ok(resultado) => println!("Resultado: {}", resultado),
+        match calculate_and_display_steps(input) {
+            Ok(resultado) => match parse_expression(input) {
+                Ok(expr) => {
+                    let (result, steps) = evaluate(&expr);
+                    println!("Result: {}", result);
+                    println!("Steps:");
+                    for step in steps {
+                        println!("{}", step);
+                    }
+                }
+                Err(e) => println!("Error: {}", e),
+            },
             Err(e) => println!("Erro: {}", e),
         }
     }
 }
 
-fn calcular_e_exibir_passos(expressao: &str) -> Result<f64, String> {
+fn calculate_and_display_steps(expressao: &str) -> Result<bool, String> {
     // Passo 1: Mostrar a expressão original
     println!("Expressão original: {}", expressao);
 
@@ -33,7 +48,7 @@ fn calcular_e_exibir_passos(expressao: &str) -> Result<f64, String> {
     println!("Expressão simplificada: {}", expressao_simplificada);
 
     // Passo 3: Avaliar a expressão
-    match eval_str(&expressao_simplificada) {
+    match valid_expression(&expressao_simplificada) {
         Ok(resultado) => {
             println!("Avaliação da expressão: {}", resultado);
             Ok(resultado)
