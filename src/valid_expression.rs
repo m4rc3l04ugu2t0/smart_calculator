@@ -30,7 +30,7 @@ pub fn valid_expression(expression: &str) -> Result<bool, MathError> {
                     return Err(MathError::InvalidExpression);
                 }
             }
-            '+' | '-' | '*' | '/' => {
+            '+' | '-' | '*' | '/' | '^' => {
                 if previus_char == ' ' || "+-*/".contains(previus_char) {
                     return Err(MathError::InvalidExpression);
                 }

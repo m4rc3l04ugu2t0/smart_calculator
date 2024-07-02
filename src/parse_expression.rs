@@ -10,6 +10,7 @@ pub enum Operator {
     Subtract,
     Multiply,
     Divide,
+    Potentiation,
 }
 
 impl Operator {
@@ -19,6 +20,7 @@ impl Operator {
             '-' => Some(Operator::Subtract),
             '*' => Some(Operator::Multiply),
             '/' => Some(Operator::Divide),
+            '^' => Some(Operator::Potentiation),
             _ => None,
         }
     }
@@ -29,6 +31,7 @@ impl Operator {
             Operator::Subtract => "-",
             Operator::Multiply => "*",
             Operator::Divide => "/",
+            Operator::Potentiation => "^",
         }
     }
 }
@@ -100,6 +103,7 @@ pub fn evaluate(expr: &Expr) -> (f64, Vec<String>) {
                 Operator::Subtract => left_val - right_val,
                 Operator::Multiply => left_val * right_val,
                 Operator::Divide => left_val / right_val,
+                Operator::Potentiation => left_val.powf(right_val),
             };
 
             let step = format!("{} {} {} = {}", left_val, op.to_string(), right_val, result);
