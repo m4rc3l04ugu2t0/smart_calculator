@@ -22,8 +22,8 @@ fn main() {
             break;
         }
 
-        match calculate_and_display_steps(input) {
-            Ok(resultado) => match parse_expression(input) {
+        match valid_expression(input) {
+            Ok(_) => match parse_expression(input) {
                 Ok(expr) => {
                     let (result, steps) = evaluate(&expr);
                     println!("Result: {}", result);
@@ -39,20 +39,3 @@ fn main() {
     }
 }
 
-fn calculate_and_display_steps(expressao: &str) -> Result<bool, String> {
-    // Passo 1: Mostrar a expressão original
-    println!("Expressão original: {}", expressao);
-
-    // Passo 2: Simplificação básica (Remover espaços)
-    let expressao_simplificada = expressao.replace(" ", "");
-    println!("Expressão simplificada: {}", expressao_simplificada);
-
-    // Passo 3: Avaliar a expressão
-    match valid_expression(&expressao_simplificada) {
-        Ok(resultado) => {
-            println!("Avaliação da expressão: {}", resultado);
-            Ok(resultado)
-        }
-        Err(e) => Err(format!("Erro na avaliação: {}", e)),
-    }
-}
