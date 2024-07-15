@@ -16,14 +16,14 @@ fn main() {
         io::stdin()
             .read_line(&mut input)
             .expect("Falha ao ler linha");
-        let input = input.trim();
+        let input = input.trim().replace(" ", "");
 
         if input.to_lowercase() == "sair" {
             break;
         }
 
-        match valid_expression(input) {
-            Ok(_) => match parse_expression(input) {
+        match valid_expression(&input) {
+            Ok(_) => match parse_expression(&input) {
                 Ok(expr) => {
                     let (result, steps) = evaluate(&expr);
                     println!("Result: {}", result);
@@ -38,4 +38,3 @@ fn main() {
         }
     }
 }
-
