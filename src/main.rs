@@ -32,7 +32,7 @@ fn main() {
                         println!("{}", step);
                     }
                 }
-                Err(e) => println!("Error: {}", e),
+                Err(e) => println!("Errorr: {}", e),
             },
             Err(e) => println!("Erro: {}", e),
         }
