@@ -25,6 +25,7 @@ fn main() {
         match valid_expression(&input) {
             Ok(_) => match parse_expression(&input) {
                 Ok(expr) => {
+                    println!("{:?}", expr);
                     let (result, steps) = evaluate(&expr);
                     println!("Result: {}", result);
                     println!("Steps:");

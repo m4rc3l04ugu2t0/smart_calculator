@@ -54,33 +54,34 @@ pub fn parse_expression(input: &str) -> Result<Expr, String> {
     parse_expr(&tokens, &mut index, 0)
 }
 
-fn insert_char_at(tokens: &[char], index: usize, new_char: char) -> Vec<char> {
+fn insert_char_at(tokens: &[char], index: usize, _new_char: char) -> Vec<char> {
     let mut new_vec: Vec<char> = Vec::with_capacity(tokens.len() + 1);
+    println!("{}", index);
 
     for (i, &val) in tokens.iter().enumerate() {
         if i == index {
-            new_vec.push(new_char);
+            new_vec.push('*');
         }
         new_vec.push(val);
     }
 
     // Caso o índice seja igual ao tamanho do array original, adicione o valor no final
     if index == tokens.len() {
-        new_vec.push(new_char);
+        new_vec.push(_new_char);
     }
 
     new_vec
 }
 
 fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<Expr, String> {
-    if *index < tokens.len() && tokens[*index] == '(' && *index > 0 {
-        let tokens = insert_char_at(tokens, *index, '*');
-        *index -= 1;
-        return parse_expr(&tokens, index, min_precedence);
-    }
-    let mut left = parse_term(tokens, index)?;
+    let tokens = if *index > 0 && tokens[*index] == '(' && tokens[*index - 1] != '*' {
+        insert_char_at(tokens, *index, '*')
+    } else {
+        tokens.to_vec() // Retorna o vetor original se a condição não for atendida
+    };
 
-    // Verifica se é necessário inserir um operador de multiplicação implícita
+    let tokens: &[char] = &tokens;
+    let mut left = parse_term(tokens, index)?;
 
     while *index < tokens.len() {
         let op = match Operator::from_char(tokens[*index]) {
@@ -95,20 +96,33 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
         *index += 1;
 
         let mut right = parse_term(tokens, index)?;
-        if *index < tokens.len() && tokens[*index] == '(' && *index > 0 {
-            let tokens = insert_char_at(tokens, *index, '*');
-            *index -= 1;
-            return parse_expr(&tokens, index, min_precedence);
-        }
+        // if *index > 0 && tokens[*index - 1] == '*' && tokens[*index] == '(' {
+        //     println!("al");
+        //     *index -= 1;
+        // }
+        let tokens = if *index > 0 && tokens[*index] == '(' && tokens[*index - 1] != '*' {
+            insert_char_at(tokens, *index, '*')
+        } else {
+            tokens.to_vec() // Retorna o vetor original se a condição não for atendida
+        };
+        let tokens: &[char] = &tokens;
+        println!("nnn {:?}", tokens);
         while *index < tokens.len() {
             let next_op = match Operator::from_char(tokens[*index]) {
                 Some(op) => op,
                 None => break,
             };
 
+            // if tokens[*index] == '(' {
+            //     println!("{}, {:?}", tokens[*index], next_op);
+            //     *index += 1;
+            // }
+
             if next_op.precedence() <= op.precedence() {
                 break;
             }
+
+            *index += 1;
 
             right = parse_expr(tokens, index, next_op.precedence())?;
         }
@@ -123,8 +137,6 @@ fn parse_term(tokens: &[char], index: &mut usize) -> Result<Expr, String> {
     if *index >= tokens.len() {
         return Err("Unexpected end of input".to_string());
     }
-
-    println!("{:?}", tokens[*index]);
 
     match tokens[*index] {
         '0'..='9' => parse_number(tokens, index),
