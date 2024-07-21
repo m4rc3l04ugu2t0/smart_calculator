@@ -1,6 +1,5 @@
 use std::io::{self, Write};
 
-mod mount_order;
 mod parse_expression;
 mod valid_expression;
 
@@ -22,9 +21,6 @@ fn main() {
         if input.to_lowercase() == "sair" {
             break;
         }
-
-        let input: String = input.chars().rev().collect();
-        println!("{}", input);
 
         match valid_expression(&input) {
             Ok(_) => match parse_expression(&input) {
