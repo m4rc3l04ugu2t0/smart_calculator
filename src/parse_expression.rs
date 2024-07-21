@@ -1,12 +1,12 @@
 #[derive(Debug)]
 pub enum Expr {
     Number(f64),
-    Op(Box<Expr>, Operator, Box<Expr>), // Representa uma operação binária, cada box é um número.
+    Op(Box<Expr>, Operator, Box<Expr>), // Representa uma operação binaria, cada box é um numero.
 }
 
 #[derive(Debug)]
 pub enum Operator {
-    Add,
+    Add, // Declarando os types para as operações possiveis
     Subtract,
     Multiply,
     Divide,
@@ -15,6 +15,8 @@ pub enum Operator {
 }
 
 impl Operator {
+    // recebe um caracter e compara com o operador, o tipo que passa na verificação ira retorna
+    // seu tipo correspondente ao operador
     fn from_char(c: char) -> Option<Operator> {
         match c {
             '+' => Some(Operator::Add),
@@ -27,6 +29,8 @@ impl Operator {
         }
     }
 
+    // compara o self que é o tipo implementado e compara com os tipos dos operadores implementados
+    // passando na verificação é retornado o caraceter do operador
     fn to_string(&self) -> &str {
         match self {
             Operator::Add => "+",
@@ -34,26 +38,31 @@ impl Operator {
             Operator::Multiply => "*",
             Operator::Divide => "/",
             Operator::Potentiation => "^",
-            Operator::CalculateRoot => "r",
+            Operator::CalculateRoot => "√",
         }
     }
 
-    fn precedence(&self) -> u8 {
+    fn order_precedence(&self) -> i8 {
         match self {
             Operator::Add | Operator::Subtract => 1,
-            Operator::Multiply | Operator::Divide => 2,
-            Operator::Potentiation | Operator::CalculateRoot => 3,
+            Operator::Divide | Operator::Multiply => 2,
+            Operator::Potentiation => 3,
+            _ => -1,
         }
     }
 }
 
+// função que vai pega o input do usuario e comverter para uma expressao valida com o auxilio
+// das demais funções
 pub fn parse_expression(input: &str) -> Result<Expr, String> {
-    let mut index = 0;
+    // tira todos os espaços em branco, itera sibre todas as caracteres em seguida filtrando cada
+    // caracter e retornando elas sem espaço, depois tranformando em um vec de char
+    let mut index = 0; // Inicializa o índice de parsing em 0.
     let tokens: Vec<char> = input.chars().filter(|c| !c.is_whitespace()).collect();
-    parse_expr(&tokens, &mut index, 0)
+    parse_expr(&tokens, &mut index) //  Chama a função parse_expr para analisar a expressão e retorna o resultado.
 }
 
-fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<Expr, String> {
+fn parse_expr(tokens: &[char], index: &mut usize) -> Result<Expr, String> {
     let mut left = parse_term(tokens, index)?;
 
     while *index < tokens.len() {
@@ -62,27 +71,10 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
             None => break,
         };
 
-        if op.precedence() < min_precedence {
-            break;
-        }
+        if op.order_precedence() > 
 
         *index += 1;
-
-        let mut right = parse_term(tokens, index)?;
-
-        while *index < tokens.len() {
-            let next_op = match Operator::from_char(tokens[*index]) {
-                Some(op) => op,
-                None => break,
-            };
-
-            if next_op.precedence() <= op.precedence() {
-                break;
-            }
-
-            right = parse_expr(tokens, index, next_op.precedence())?;
-        }
-
+        let right = parse_term(tokens, index)?;
         left = Expr::Op(Box::new(left), op, Box::new(right));
     }
 
@@ -91,40 +83,19 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
 
 fn parse_term(tokens: &[char], index: &mut usize) -> Result<Expr, String> {
     if *index >= tokens.len() {
-        return Err("Unexpected end of input".to_string());
-    }
-
-    if tokens[*index] == '*' {
-        *index += 1;
+        // verifica se o indice é maior ou igual ao comprimento do vec de caracteres
+        return Err("Unexpected end of input".to_string()); // case nao passe na validação retorna error
     }
 
     match tokens[*index] {
-        '0'..='9' => parse_number(tokens, index),
+        '0'..='9' => parse_number(tokens, index), // verifica se é um numero velido na tabela unicode
         '(' => {
-            *index += 1;
-            let expr = parse_expr(tokens, index, 0)?;
+            *index += 1; // skip '('
+            let expr = parse_expr(tokens, index)?;
             if *index >= tokens.len() || tokens[*index] != ')' {
                 return Err("Expected closing parenthesis".to_string());
             }
-            *index += 1;
-            Ok(expr)
-        }
-        '{' => {
-            *index += 1;
-            let expr = parse_expr(tokens, index, 0)?;
-            if *index >= tokens.len() || tokens[*index] != '}' {
-                return Err("Expected closing parenthesis".to_string());
-            }
-            *index += 1;
-            Ok(expr)
-        }
-        '[' => {
-            *index += 1;
-            let expr = parse_expr(tokens, index, 0)?;
-            if *index >= tokens.len() || tokens[*index] != ']' {
-                return Err("Expected closing parenthesis".to_string());
-            }
-            *index += 1;
+            *index += 1; // skip ')'
             Ok(expr)
         }
         _ => Err(format!("Unexpected character: {}", tokens[*index])),

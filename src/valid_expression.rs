@@ -10,38 +10,30 @@ pub enum MathError {
 impl Display for MathError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            MathError::InvalidExpression => write!(f, "Expressão inválida"),
-            MathError::InvalidInput(input) => write!(f, "Entrada inválida: {}", input),
+            MathError::InvalidExpression => write!(f, "Attempted to divide by zero"),
+            MathError::InvalidInput(input) => write!(f, "Invalid input provided: {}", input),
         }
     }
 }
 
 impl Error for MathError {}
 
-pub fn valid_expression(expression: &str) -> Result<(), MathError> {
+pub fn valid_expression(expression: &str) -> Result<bool, MathError> {
     let mut parentheses_stack = Vec::new();
-    let mut previous_char = ' ';
+    let mut previus_char = ' ';
 
     for ch in expression.chars() {
         match ch {
-            '(' | '[' | '{' => parentheses_stack.push(ch),
+            '(' => {
+                parentheses_stack.push(ch);
+            }
             ')' => {
                 if parentheses_stack.pop() != Some('(') {
                     return Err(MathError::InvalidExpression);
                 }
             }
-            ']' => {
-                if parentheses_stack.pop() != Some('[') {
-                    return Err(MathError::InvalidExpression);
-                }
-            }
-            '}' => {
-                if parentheses_stack.pop() != Some('{') {
-                    return Err(MathError::InvalidExpression);
-                }
-            }
             '+' | '-' | '*' | '/' | '^' | 'r' => {
-                if previous_char == ' ' || "+-*/^r".contains(previous_char) {
+                if previus_char == ' ' || "+-*/".contains(previus_char) {
                     return Err(MathError::InvalidExpression);
                 }
             }
@@ -49,16 +41,16 @@ pub fn valid_expression(expression: &str) -> Result<(), MathError> {
             '0'..='9' => {}
             _ => return Err(MathError::InvalidInput(expression.to_string())),
         }
-        previous_char = ch;
+        previus_char = ch;
     }
 
     if !parentheses_stack.is_empty() {
         return Err(MathError::InvalidExpression);
     }
 
-    if "+-*/^r".contains(previous_char) {
+    if "+-*/".contains(previus_char) {
         return Err(MathError::InvalidExpression);
     }
 
-    Ok(())
+    Ok(true)
 }

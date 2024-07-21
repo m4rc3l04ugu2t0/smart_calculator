@@ -1,5 +1,6 @@
 use std::io::{self, Write};
 
+mod mount_order;
 mod parse_expression;
 mod valid_expression;
 
@@ -22,6 +23,9 @@ fn main() {
             break;
         }
 
+        let input: String = input.chars().rev().collect();
+        println!("{}", input);
+
         match valid_expression(&input) {
             Ok(_) => match parse_expression(&input) {
                 Ok(expr) => {
@@ -32,7 +36,7 @@ fn main() {
                         println!("{}", step);
                     }
                 }
-                Err(e) => println!("Errorr: {}", e),
+                Err(e) => println!("Error: {}", e),
             },
             Err(e) => println!("Erro: {}", e),
         }
