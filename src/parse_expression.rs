@@ -93,8 +93,11 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
             break;
         }
 
-        *index += 1;
-
+        if *index > 0 && tokens[*index] == '*' && tokens[*index + 1] != '(' {
+            *index -= 1;
+        } else {
+            *index += 1;
+        }
         let mut right = parse_term(tokens, index)?;
         // if *index > 0 && tokens[*index - 1] == '*' && tokens[*index] == '(' {
         //     println!("al");
@@ -113,16 +116,14 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
                 None => break,
             };
 
-            // if tokens[*index] == '(' {
-            //     println!("{}, {:?}", tokens[*index], next_op);
-            //     *index += 1;
-            // }
-
             if next_op.precedence() <= op.precedence() {
                 break;
             }
-
-            *index += 1;
+            if *index > 0 && tokens[*index] == '*' && tokens[*index + 1] == '(' {
+                *index -= 1;
+            } else {
+                *index += 1;
+            }
 
             right = parse_expr(tokens, index, next_op.precedence())?;
         }
@@ -147,6 +148,7 @@ fn parse_term(tokens: &[char], index: &mut usize) -> Result<Expr, String> {
                 return Err("Expected closing parenthesis".to_string());
             }
             *index += 1;
+            println!("{:?}", expr);
             Ok(expr)
         }
         '{' => {
