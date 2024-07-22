@@ -54,33 +54,7 @@ pub fn parse_expression(input: &str) -> Result<Expr, String> {
     parse_expr(&tokens, &mut index, 0)
 }
 
-fn insert_char_at(tokens: &[char], index: usize, _new_char: char) -> Vec<char> {
-    let mut new_vec: Vec<char> = Vec::with_capacity(tokens.len() + 1);
-    println!("{}", index);
-
-    for (i, &val) in tokens.iter().enumerate() {
-        if i == index {
-            new_vec.push('*');
-        }
-        new_vec.push(val);
-    }
-
-    // Caso o índice seja igual ao tamanho do array original, adicione o valor no final
-    if index == tokens.len() {
-        new_vec.push(_new_char);
-    }
-
-    new_vec
-}
-
 fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<Expr, String> {
-    let tokens = if *index > 0 && tokens[*index] == '(' && tokens[*index - 1] != '*' {
-        insert_char_at(tokens, *index, '*')
-    } else {
-        tokens.to_vec() // Retorna o vetor original se a condição não for atendida
-    };
-
-    let tokens: &[char] = &tokens;
     let mut left = parse_term(tokens, index)?;
 
     while *index < tokens.len() {
@@ -93,39 +67,47 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
             break;
         }
 
-        if *index > 0 && tokens[*index] == '*' && tokens[*index + 1] != '(' {
-            *index -= 1;
+        if min_precedence == 2 && min_precedence > 1 {
+            println!("oi");
         } else {
             *index += 1;
         }
+
         let mut right = parse_term(tokens, index)?;
-        // if *index > 0 && tokens[*index - 1] == '*' && tokens[*index] == '(' {
-        //     println!("al");
-        //     *index -= 1;
-        // }
-        let tokens = if *index > 0 && tokens[*index] == '(' && tokens[*index - 1] != '*' {
-            insert_char_at(tokens, *index, '*')
-        } else {
-            tokens.to_vec() // Retorna o vetor original se a condição não for atendida
-        };
-        let tokens: &[char] = &tokens;
-        println!("nnn {:?}", tokens);
+
         while *index < tokens.len() {
+            if *index > 0 && tokens[*index] == ')' && tokens[*index + 1] == '^' {
+                let result = Ok(Expr::Op(
+                    Box::new(Expr::Op(Box::new(left), op, Box::new(right))),
+                    Operator::Potentiation,
+                    Box::new(Expr::Number(
+                        tokens[*index + 2].to_digit(10).expect("Error").into(),
+                    )),
+                ));
+
+                println!("{:?}", result);
+                return result;
+            }
+            if *index > 0 && !tokens[*index - 1].is_digit(10) && tokens[*index] == '(' {
+                break;
+            }
+
             let next_op = match Operator::from_char(tokens[*index]) {
-                Some(op) => op,
+                Some(next_op) => next_op,
                 None => break,
             };
 
             if next_op.precedence() <= op.precedence() {
                 break;
             }
-            if *index > 0 && tokens[*index] == '*' && tokens[*index + 1] == '(' {
+
+            if next_op.precedence() == 2 || tokens[*index] == '*' {
                 *index -= 1;
+                right = parse_expr(tokens, index, next_op.precedence())?;
             } else {
                 *index += 1;
+                right = parse_expr(tokens, index, next_op.precedence())?;
             }
-
-            right = parse_expr(tokens, index, next_op.precedence())?;
         }
 
         left = Expr::Op(Box::new(left), op, Box::new(right));
@@ -148,25 +130,9 @@ fn parse_term(tokens: &[char], index: &mut usize) -> Result<Expr, String> {
                 return Err("Expected closing parenthesis".to_string());
             }
             *index += 1;
-            println!("{:?}", expr);
-            Ok(expr)
-        }
-        '{' => {
-            *index += 1;
-            let expr = parse_expr(tokens, index, 0)?;
-            if *index >= tokens.len() || tokens[*index] != '}' {
-                return Err("Expected closing parenthesis".to_string());
+            if *index > 0 && tokens[*index] == '^' {
+                *index = tokens.len();
             }
-            *index += 1;
-            Ok(expr)
-        }
-        '[' => {
-            *index += 1;
-            let expr = parse_expr(tokens, index, 0)?;
-            if *index >= tokens.len() || tokens[*index] != ']' {
-                return Err("Expected closing parenthesis".to_string());
-            }
-            *index += 1;
             Ok(expr)
         }
         _ => Err(format!("Unexpected character: {}", tokens[*index])),
@@ -187,6 +153,7 @@ fn parse_number(tokens: &[char], index: &mut usize) -> Result<Expr, String> {
 }
 
 pub fn evaluate(expr: &Expr) -> (f64, Vec<String>) {
+    println!("{:?}", expr);
     match expr {
         Expr::Number(n) => (*n, vec![n.to_string()]),
         Expr::Op(left, op, right) => {
