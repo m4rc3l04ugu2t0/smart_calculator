@@ -1,10 +1,10 @@
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Expr {
     Number(f64),
     Op(Box<Expr>, Operator, Box<Expr>),
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum Operator {
     Add,
     Subtract,
@@ -66,7 +66,6 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
         if op.precedence() < min_precedence {
             break;
         }
-
         *index += 1;
         let mut right = parse_term(tokens, index)?;
 
@@ -78,6 +77,26 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
 
             if next_op.precedence() <= op.precedence() {
                 break;
+            }
+
+            if tokens[*index] == '^' {
+                *index += 1;
+                right = Expr::Op(
+                    Box::new(right),
+                    next_op,
+                    Box::new(Expr::Number(
+                        tokens[*index]
+                            .to_digit(10)
+                            .expect("Fail parse to number")
+                            .into(),
+                    )),
+                );
+
+                break;
+            }
+
+            if tokens[*index] == '*' || tokens[*index] == '/' {
+                *index -= 1;
             }
 
             right = parse_expr(tokens, index, next_op.precedence())?;
@@ -144,5 +163,159 @@ pub fn evaluate(expr: &Expr) -> (f64, Vec<String>) {
             left_steps.push(step);
             (result, left_steps)
         }
+    }
+}
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_parse_number() {
+        let tokens: Vec<char> = "123.45".chars().collect();
+        let mut index = 0;
+        let result = parse_number(&tokens, &mut index).unwrap();
+        assert_eq!(result, Expr::Number(123.45));
+    }
+
+    #[test]
+    fn test_parse_expr_addition() {
+        let expr = parse_expression("3+5").unwrap();
+        if let Expr::Op(left, Operator::Add, right) = expr {
+            assert_eq!(*left, Expr::Number(3.0));
+            assert_eq!(*right, Expr::Number(5.0));
+        } else {
+            panic!("Failed to parse addition expression");
+        }
+    }
+
+    #[test]
+    fn test_parse_expr_subtraction() {
+        let expr = parse_expression("10-4").unwrap();
+        if let Expr::Op(left, Operator::Subtract, right) = expr {
+            assert_eq!(*left, Expr::Number(10.0));
+            assert_eq!(*right, Expr::Number(4.0));
+        } else {
+            panic!("Failed to parse subtraction expression");
+        }
+    }
+
+    #[test]
+    fn test_parse_expr_multiplication() {
+        let expr = parse_expression("2*3").unwrap();
+        if let Expr::Op(left, Operator::Multiply, right) = expr {
+            assert_eq!(*left, Expr::Number(2.0));
+            assert_eq!(*right, Expr::Number(3.0));
+        } else {
+            panic!("Failed to parse multiplication expression");
+        }
+    }
+
+    #[test]
+    fn test_parse_expr_division() {
+        let expr = parse_expression("8/2").unwrap();
+        if let Expr::Op(left, Operator::Divide, right) = expr {
+            assert_eq!(*left, Expr::Number(8.0));
+            assert_eq!(*right, Expr::Number(2.0));
+        } else {
+            panic!("Failed to parse division expression");
+        }
+    }
+
+    #[test]
+    fn test_parse_expr_potentiation() {
+        let expr = parse_expression("2^3").unwrap();
+        if let Expr::Op(left, Operator::Potentiation, right) = expr {
+            assert_eq!(*left, Expr::Number(2.0));
+            assert_eq!(*right, Expr::Number(3.0));
+        } else {
+            panic!("Failed to parse potentiation expression");
+        }
+    }
+
+    #[test]
+    fn test_parse_expr_calculate_root() {
+        let expr = parse_expression("8r3").unwrap();
+        if let Expr::Op(left, Operator::CalculateRoot, right) = expr {
+            assert_eq!(*left, Expr::Number(8.0));
+            assert_eq!(*right, Expr::Number(3.0));
+        } else {
+            panic!("Failed to parse root calculation expression");
+        }
+    }
+
+    #[test]
+    fn test_evaluate_addition() {
+        let expr = parse_expression("3+5").unwrap();
+        let (result, steps) = evaluate(&expr);
+        assert_eq!(result, 8.0);
+        assert_eq!(steps, vec!["3", "5", "3 + 5 = 8"]);
+    }
+
+    #[test]
+    fn test_evaluate_subtraction() {
+        let expr = parse_expression("10-4").unwrap();
+        let (result, steps) = evaluate(&expr);
+        assert_eq!(result, 6.0);
+        assert_eq!(steps, vec!["10", "4", "10 - 4 = 6"]);
+    }
+
+    #[test]
+    fn test_evaluate_multiplication() {
+        let expr = parse_expression("2*3").unwrap();
+        let (result, steps) = evaluate(&expr);
+        assert_eq!(result, 6.0);
+        assert_eq!(steps, vec!["2", "3", "2 * 3 = 6"]);
+    }
+
+    #[test]
+    fn test_evaluate_division() {
+        let expr = parse_expression("8/2").unwrap();
+        let (result, steps) = evaluate(&expr);
+        assert_eq!(result, 4.0);
+        assert_eq!(steps, vec!["8", "2", "8 / 2 = 4"]);
+    }
+
+    #[test]
+    fn test_evaluate_potentiation() {
+        let expr = parse_expression("2^3").unwrap();
+        let (result, steps) = evaluate(&expr);
+        assert_eq!(result, 8.0);
+        assert_eq!(steps, vec!["2", "3", "2 ^ 3 = 8"]);
+    }
+
+    #[test]
+    fn test_evaluate_calculate_root() {
+        let expr = parse_expression("8r3").unwrap();
+        let (result, steps) = evaluate(&expr);
+        assert_eq!(result, 2.0);
+        assert_eq!(steps, vec!["8", "3", "8 r 3 = 2"]);
+    }
+
+    #[test]
+    fn test_evaluate_complex_expression() {
+        let expr = parse_expression("2+3*4-5/5").unwrap();
+        let (result, steps) = evaluate(&expr);
+        assert_eq!(result, 13.0);
+        assert_eq!(
+            steps,
+            vec![
+                "2",
+                "3",
+                "4",
+                "3 * 4 = 12",
+                "2 + 12 = 14",
+                "5",
+                "5",
+                "5 / 5 = 1",
+                "14 - 1 = 13"
+            ]
+        );
+    }
+
+    #[test]
+    fn test_invalid_expression_unbalanced_parentheses() {
+        let result = parse_expression("2*(3+4");
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), "Expected closing parenthesis");
     }
 }
