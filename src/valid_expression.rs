@@ -60,6 +60,9 @@ pub fn valid_expression(expression: &str) -> Result<String, MathError> {
             '0'..='9' => {
                 new_vec.push(ch);
             }
+            '.' => {
+                new_vec.push(ch);
+            }
             _ => return Err(MathError::InvalidInput(expression.to_string())),
         }
         previous_char = ch;

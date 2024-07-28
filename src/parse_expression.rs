@@ -68,6 +68,7 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
         }
         *index += 1;
         let mut right = parse_term(tokens, index)?;
+        println!("{:?}", right);
 
         while *index < tokens.len() {
             let next_op = match Operator::from_char(tokens[*index]) {
@@ -91,7 +92,6 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
                             .into(),
                     )),
                 );
-
                 break;
             }
 
@@ -118,6 +118,10 @@ fn parse_term(tokens: &[char], index: &mut usize) -> Result<Expr, String> {
         '(' => {
             *index += 1;
             let expr = parse_expr(tokens, index, 0)?;
+
+            if *index <= tokens.len() - 1 && tokens[*index - 1] == '^' {
+                *index += 1;
+            }
 
             if *index >= tokens.len() || tokens[*index] != ')' {
                 return Err("Expected closing parenthesis".to_string());
