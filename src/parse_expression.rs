@@ -114,7 +114,7 @@ fn parse_term(tokens: &[char], index: &mut usize) -> Result<Expr, String> {
     }
 
     match tokens[*index] {
-        '0'..='9' => parse_number(tokens, index),
+        '0'..='9' | '-' => parse_number(tokens, index),
         '(' => {
             *index += 1;
             let expr = parse_expr(tokens, index, 0)?;
@@ -134,15 +134,38 @@ fn parse_term(tokens: &[char], index: &mut usize) -> Result<Expr, String> {
 }
 
 fn parse_number(tokens: &[char], index: &mut usize) -> Result<Expr, String> {
-    let start = *index;
+    let mut start = *index;
+
+    if (start == 0 && tokens[start] == '-')
+        || (tokens[start] == '-' && tokens[*index - 1] == '^')
+        || (tokens[start] == '-' && tokens[*index - 1] == '*')
+    {
+        *index += 1;
+        start = *index;
+    }
+
     while *index < tokens.len() && (tokens[*index].is_digit(10) || tokens[*index] == '.') {
         *index += 1;
     }
-    let number: f64 = tokens[start..*index]
-        .iter()
-        .collect::<String>()
+
+    let number_str: String = if start > 0 && tokens[start - 1] == '-' {
+        let number = if start == 1 || tokens[start - 2] == '^' || tokens[start - 2] == '*' {
+            ["-", &tokens[start..*index].iter().collect::<String>()].concat()
+        } else {
+            tokens[start..*index].iter().collect()
+        };
+
+        number
+    } else {
+        tokens[start..*index].iter().collect()
+    };
+
+    println!("number_str: {}", number_str);
+
+    let number: f64 = number_str
         .parse()
         .map_err(|e| format!("Failed to parse number: {}", e))?;
+    println!("number: {}", number);
     Ok(Expr::Number(number))
 }
 
@@ -158,7 +181,13 @@ pub fn evaluate(expr: &Expr) -> (f64, Vec<String>) {
                 Operator::Subtract => left_val - right_val,
                 Operator::Multiply => left_val * right_val,
                 Operator::Divide => left_val / right_val,
-                Operator::Potentiation => left_val.powf(right_val),
+                Operator::Potentiation => {
+                    if left_val < 0.0 {
+                        -left_val.powf(right_val)
+                    } else {
+                        left_val.powf(right_val)
+                    }
+                }
                 Operator::CalculateRoot => left_val.powf(1.0 / right_val),
             };
 
@@ -321,5 +350,44 @@ mod tests {
         let result = parse_expression("2*(3+4");
         assert!(result.is_err());
         assert_eq!(result.unwrap_err(), "Expected closing parenthesis");
+    }
+
+    #[test]
+    fn test_parse_term_negative() {
+        let tokens: Vec<char> = "-2.2".chars().collect();
+        let mut index = 0;
+        let result = parse_term(&tokens, &mut index);
+        assert!(result.is_ok());
+        if let Expr::Number(n) = result.unwrap() {
+            assert_eq!(n, -2.2);
+        } else {
+            panic!("Expected Expr::Number");
+        }
+    }
+
+    #[test]
+    fn test_parse_expression_with_negative_numbers() {
+        let expression = "-2 + 3";
+        let result = parse_expression(expression);
+        assert!(result.is_ok());
+        let parsed_expr = result.unwrap();
+        let (evaluated_value, steps) = evaluate(&parsed_expr);
+        assert_eq!(evaluated_value, 1.0);
+        for step in steps {
+            println!("{}", step);
+        }
+    }
+
+    #[test]
+    fn test_negative_exponentiation() {
+        let expression = "-2^-2";
+        let result = parse_expression(expression);
+        assert!(result.is_ok());
+        let parsed_expr = result.unwrap();
+        let (evaluated_value, steps) = evaluate(&parsed_expr);
+        assert_eq!(evaluated_value, 0.25);
+        for step in steps {
+            println!("{}", step);
+        }
     }
 }

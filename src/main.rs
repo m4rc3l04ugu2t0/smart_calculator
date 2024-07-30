@@ -21,6 +21,7 @@ fn main() {
         if input.to_lowercase() == "sair" {
             break;
         }
+        println!("{}", -2.0_f32.powf(-2.0));
 
         match valid_expression(&input) {
             Ok(expr) => match parse_expression(&expr) {

@@ -46,7 +46,10 @@ pub fn valid_expression(expression: &str) -> Result<String, MathError> {
                 }
             }
             '+' | '-' | '*' | '/' | '^' | 'r' => {
-                if previous_char == ' ' || "+-*/".contains(previous_char) {
+                if (previous_char == ' ' || "+-*/".contains(previous_char))
+                    && index > 0
+                    && ch != '-'
+                {
                     return Err(MathError::InvalidExpression);
                 }
                 new_vec.push(ch);
@@ -77,7 +80,7 @@ pub fn valid_expression(expression: &str) -> Result<String, MathError> {
     }
 
     let new_vec: String = new_vec.iter().collect();
-    println!("{}", new_vec);
+    println!("new vec: {}", new_vec);
 
     Ok(new_vec)
 }
