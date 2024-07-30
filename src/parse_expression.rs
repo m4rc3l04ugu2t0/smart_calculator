@@ -67,8 +67,8 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
             break;
         }
         *index += 1;
+
         let mut right = parse_term(tokens, index)?;
-        println!("{:?}", right);
 
         while *index < tokens.len() {
             let next_op = match Operator::from_char(tokens[*index]) {
@@ -160,12 +160,10 @@ fn parse_number(tokens: &[char], index: &mut usize) -> Result<Expr, String> {
         tokens[start..*index].iter().collect()
     };
 
-    println!("number_str: {}", number_str);
-
     let number: f64 = number_str
         .parse()
         .map_err(|e| format!("Failed to parse number: {}", e))?;
-    println!("number: {}", number);
+
     Ok(Expr::Number(number))
 }
 
