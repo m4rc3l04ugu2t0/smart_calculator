@@ -1,10 +1,12 @@
 use serde::{Deserialize, Serialize};
 
+use crate::ClientError;
+
 #[derive(Serialize)]
 pub struct CalculationResponse {
     pub result: f64,
     pub steps: Vec<String>,
-    pub error: String,
+    pub error: ClientError,
 }
 
 #[derive(Deserialize)]

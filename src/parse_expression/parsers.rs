@@ -1,12 +1,15 @@
-use crate::structs::expression::{Expr, Operator};
+use crate::{
+    structs::expression::{Expr, Operator},
+    ClientError, Result,
+};
 
-pub fn parse_expression(input: &str) -> Result<Expr, String> {
+pub fn parse_expression(input: &str) -> Result<Expr> {
     let mut index = 0;
     let tokens: Vec<char> = input.chars().filter(|c| !c.is_whitespace()).collect();
     parse_expr(&tokens, &mut index, 0)
 }
 
-fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<Expr, String> {
+fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<Expr> {
     let mut left = parse_term(tokens, index)?;
 
     while *index < tokens.len() {
@@ -60,9 +63,9 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
     Ok(left)
 }
 
-fn parse_term(tokens: &[char], index: &mut usize) -> Result<Expr, String> {
+fn parse_term(tokens: &[char], index: &mut usize) -> Result<Expr> {
     if *index >= tokens.len() {
-        return Err("Unexpected end of input".to_string());
+        return Err(ClientError::UnexpectedEndOfInput);
     }
 
     match tokens[*index] {
@@ -76,16 +79,16 @@ fn parse_term(tokens: &[char], index: &mut usize) -> Result<Expr, String> {
             }
 
             if *index >= tokens.len() || tokens[*index] != ')' {
-                return Err("Expected closing parenthesis".to_string());
+                return Err(ClientError::ExpectedClosingParenthesis);
             }
             *index += 1;
             Ok(expr)
         }
-        _ => Err(format!("Unexpected character: {}", tokens[*index])),
+        _ => Err(ClientError::UnexpectedCharacter(tokens[*index].into())),
     }
 }
 
-fn parse_number(tokens: &[char], index: &mut usize) -> Result<Expr, String> {
+fn parse_number(tokens: &[char], index: &mut usize) -> Result<Expr> {
     let mut start = *index;
 
     if (start == 0 && tokens[start] == '-')
@@ -112,9 +115,7 @@ fn parse_number(tokens: &[char], index: &mut usize) -> Result<Expr, String> {
         tokens[start..*index].iter().collect()
     };
 
-    let number: f64 = number_str
-        .parse()
-        .map_err(|e| format!("Failed to parse number: {}", e))?;
+    let number: f64 = number_str.parse()?;
 
     Ok(Expr::Number(number))
 }

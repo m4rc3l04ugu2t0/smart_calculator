@@ -5,17 +5,19 @@ use crate::{
     evaluator::evaluate::evaluate,
     parse_expression::parsers::parse_expression,
     structs::req::{CalculationRequest, CalculationResponse},
+    ClientError,
 };
 
 pub async fn calculate(Json(payload): Json<CalculationRequest>) -> impl IntoResponse {
     match valid_expression(&payload.expression).await {
         Ok(expression) => match parse_expression(&expression) {
             Ok(expr) => {
+                println!("{}", expression);
                 let (result, steps) = evaluate(&expr);
                 let response = CalculationResponse {
                     result,
                     steps,
-                    error: "".to_string(),
+                    error: ClientError::Successes,
                 };
                 Json(response).into_response()
             }
