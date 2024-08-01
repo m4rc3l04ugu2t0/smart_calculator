@@ -1,42 +1,22 @@
-use std::io::{self, Write};
-
+mod check_expression;
+mod error;
+mod evaluator;
 mod parse_expression;
-mod valid_expression;
+mod structs;
+mod web;
 
-use parse_expression::{evaluate, parse_expression};
-use valid_expression::valid_expression;
+use axum::{routing::post, serve, Router};
+use tokio::net::TcpListener;
+use web::entry_point::calculate;
 
-fn main() {
-    println!("Calculadora Inteligente");
-    loop {
-        print!("Digite a expressão (ou 'sair' para terminar): ");
-        io::stdout().flush().unwrap();
+pub use self::error::{ClientError, Result};
 
-        let mut input = String::new();
-        io::stdin()
-            .read_line(&mut input)
-            .expect("Falha ao ler linha");
-        let input = input.trim().replace(" ", "");
+#[tokio::main]
+async fn main() -> Result<()> {
+    let app = Router::new().route("/calculate", post(calculate));
 
-        if input.to_lowercase() == "sair" {
-            break;
-        }
-        println!("{}", -2.0_f32.powf(-2.0));
+    let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    serve(listener, app).await.unwrap();
 
-        match valid_expression(&input) {
-            Ok(expr) => match parse_expression(&expr) {
-                Ok(expr) => {
-                    println!("{:?}", expr);
-                    let (result, steps) = evaluate(&expr);
-                    println!("Result: {}", result);
-                    println!("Steps:");
-                    for step in steps {
-                        println!("{}", step);
-                    }
-                }
-                Err(e) => println!("Error: {}", e),
-            },
-            Err(e) => println!("Erro: {}", e),
-        }
-    }
+    Ok(())
 }
