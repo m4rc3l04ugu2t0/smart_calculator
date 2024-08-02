@@ -17,13 +17,13 @@ pub async fn calculate(Json(payload): Json<CalculationRequest>) -> impl IntoResp
                 let response = CalculationResponse {
                     result,
                     steps,
-                    error: ClientError::Successes,
+                    status: ClientError::Successes,
                 };
                 Json(response).into_response()
             }
             Err(e) => {
                 let response = CalculationResponse {
-                    error: e,
+                    status: e,
                     result: 0.0,
                     steps: Vec::new(),
                 };

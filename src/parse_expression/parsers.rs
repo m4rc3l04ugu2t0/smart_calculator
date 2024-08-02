@@ -91,10 +91,7 @@ fn parse_term(tokens: &[char], index: &mut usize) -> Result<Expr> {
 fn parse_number(tokens: &[char], index: &mut usize) -> Result<Expr> {
     let mut start = *index;
 
-    if (start == 0 && tokens[start] == '-')
-        || (tokens[start] == '-' && tokens[*index - 1] == '^')
-        || (tokens[start] == '-' && tokens[*index - 1] == '*')
-    {
+    if *index > 0 && tokens[start] == '-' {
         *index += 1;
         start = *index;
     }
@@ -103,14 +100,8 @@ fn parse_number(tokens: &[char], index: &mut usize) -> Result<Expr> {
         *index += 1;
     }
 
-    let number_str: String = if start > 0 && tokens[start - 1] == '-' {
-        let number = if start == 1 || tokens[start - 2] == '^' || tokens[start - 2] == '*' {
-            ["-", &tokens[start..*index].iter().collect::<String>()].concat()
-        } else {
-            tokens[start..*index].iter().collect()
-        };
-
-        number
+    let number_str: String = if *index > 0 && tokens[start - 1] == '-' {
+        ["-", &tokens[start..*index].iter().collect::<String>()].concat()
     } else {
         tokens[start..*index].iter().collect()
     };

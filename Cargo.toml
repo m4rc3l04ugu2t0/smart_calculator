@@ -9,3 +9,7 @@ meval = "0.2.0"
 serde = { version = "1.0.203", features = ["derive"] }
 serde_json = "1.0.121"
 tokio = { version = "1.39.2", features = ["macros", "rt-multi-thread"] }
+
+[dev-dependencies]
+httpc-test = "0.1.9"
+anyhow = "1.0.86"
