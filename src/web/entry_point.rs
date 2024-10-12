@@ -1,15 +1,10 @@
-use axum::{response::IntoResponse, Json};
-
 use crate::{
-    check_expression::valid_expression::valid_expression,
-    evaluator::evaluate::evaluate,
-    parse_expression::parsers::parse_expression,
-    structs::req::{CalculationRequest, CalculationResponse},
-    ClientError,
+    check_expression::valid_expression::valid_expression, evaluator::evaluate::evaluate,
+    parse_expression::parsers::parse_expression, structs::req::CalculationResponse, ClientError,
 };
 
-pub async fn calculate(Json(payload): Json<CalculationRequest>) -> impl IntoResponse {
-    match valid_expression(&payload.expression).await {
+pub fn calculate(input: String) -> Result<CalculationResponse, ClientError> {
+    match valid_expression(&input) {
         Ok(expression) => match parse_expression(&expression) {
             Ok(expr) => {
                 println!("{}", expression);
@@ -19,7 +14,7 @@ pub async fn calculate(Json(payload): Json<CalculationRequest>) -> impl IntoResp
                     steps,
                     status: ClientError::Successes,
                 };
-                Json(response).into_response()
+                Ok(response)
             }
             Err(e) => {
                 let response = CalculationResponse {
@@ -27,9 +22,9 @@ pub async fn calculate(Json(payload): Json<CalculationRequest>) -> impl IntoResp
                     result: 0.0,
                     steps: Vec::new(),
                 };
-                Json(response).into_response()
+                Ok(response)
             }
         },
-        Err(e) => e.into_response(),
+        Err(e) => Err(e),
     }
 }
