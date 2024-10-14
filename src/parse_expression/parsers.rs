@@ -4,6 +4,7 @@ use crate::{
 };
 
 pub fn parse_expression(input: &str) -> Result<Expr> {
+    print!("{}", input);
     let mut index = 0;
     let tokens: Vec<char> = input.chars().filter(|c| !c.is_whitespace()).collect();
     parse_expr(&tokens, &mut index, 0)

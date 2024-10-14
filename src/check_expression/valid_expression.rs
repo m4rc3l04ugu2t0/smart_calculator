@@ -65,44 +65,49 @@ pub fn valid_expression(expression: &str) -> Result<String> {
 
     Ok(new_vec)
 }
-#[test]
-fn test_valid_expression() {
-    // Teste com uma expressão válida
-    let expr = "3 + (2 - 1) * 5";
-    let result = valid_expression(expr);
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(), "3+(2-1)*5");
 
-    // Teste com uma expressão inválida (parênteses desbalanceados)
-    let expr = "3 + (2 - 1 * 5";
-    let result = valid_expression(expr);
-    assert!(result.is_err());
-    assert_eq!(result.unwrap_err(), ClientError::InvalidExpression);
+#[cfg(test)]
+mod tests_valid_expression {
+    use super::*;
+    #[test]
+    fn test_valid_expression() {
+        // Teste com uma expressão válida
+        let expr = "3 + (2 - 1) * 5";
+        let result = valid_expression(expr);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), "3+(2-1)*5");
 
-    // Teste com uma expressão inválida (caracteres inválidos)
-    let expr = "3 + 2a - 1";
-    let result = valid_expression(expr);
-    assert!(result.is_err());
-    assert_eq!(
-        result.unwrap_err(),
-        ClientError::InvalidInput("3 + 2a - 1".to_string())
-    );
+        // Teste com uma expressão inválida (parênteses desbalanceados)
+        let expr = "3 + (2 - 1 * 5";
+        let result = valid_expression(expr);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), ClientError::InvalidExpression);
 
-    // Teste com uma expressão com caracteres alfabéticos
-    let expr = "3a + 2b";
-    let result = valid_expression(expr);
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(), "3*a+2*b");
+        // Teste com uma expressão inválida (caracteres inválidos)
+        let expr = "3 + 2a - 1";
+        let result = valid_expression(expr);
+        assert!(result.is_err());
+        assert_eq!(
+            result.unwrap_err(),
+            ClientError::InvalidInput("3 + 2a - 1".to_string())
+        );
 
-    // Teste com expressão que termina com operador inválido
-    let expr = "3 + 2 -";
-    let result = valid_expression(expr);
-    assert!(result.is_err());
-    assert_eq!(result.unwrap_err(), ClientError::InvalidExpression);
+        // Teste com uma expressão com caracteres alfabéticos
+        let expr = "3a + 2b";
+        let result = valid_expression(expr);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), "3*a+2*b");
 
-    // Teste com expressão contendo ponto decimal
-    let expr = "3.5 + 2.1";
-    let result = valid_expression(expr);
-    assert!(result.is_ok());
-    assert_eq!(result.unwrap(), "3.5+2.1");
+        // Teste com expressão que termina com operador inválido
+        let expr = "3 + 2 -";
+        let result = valid_expression(expr);
+        assert!(result.is_err());
+        assert_eq!(result.unwrap_err(), ClientError::InvalidExpression);
+
+        // Teste com expressão contendo ponto decimal
+        let expr = "3.5 + 2.1";
+        let result = valid_expression(expr);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), "3.5+2.1");
+    }
 }
