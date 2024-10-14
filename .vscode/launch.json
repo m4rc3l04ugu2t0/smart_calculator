@@ -1,0 +1,46 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug executable 'smart_calculator'",
+            "cargo": {
+                "args": [
+                    "build",
+                    "--bin=smart_calculator",
+                    "--package=smart_calculator"
+                ],
+                "filter": {
+                    "name": "smart_calculator",
+                    "kind": "bin"
+                }
+            },
+            "program": "${cargo:program}",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests in executable 'smart_calculator'",
+            "cargo": {
+                "args": [
+                    "test",
+                    "--no-run",
+                    "--bin=smart_calculator",
+                    "--package=smart_calculator"
+                ],
+                "filter": {
+                    "name": "smart_calculator",
+                    "kind": "bin"
+                }
+            },
+            "program": "${cargo:program}",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "stopOnEntry": false
+        }
+    ]
+}
