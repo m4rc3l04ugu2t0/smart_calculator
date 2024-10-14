@@ -15,7 +15,7 @@ pub use self::error::{ClientError, Result};
 async fn main() -> Result<()> {
     let app = Router::new().route("/calculate", post(calculate));
 
-    let listener = TcpListener::bind("0.0.0.0:3000").await.unwrap();
+    let listener = TcpListener::bind("0.0.0.0:3001").await.unwrap();
     serve(listener, app).await.unwrap();
 
     Ok(())
