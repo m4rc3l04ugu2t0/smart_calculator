@@ -143,9 +143,9 @@ fn parse_negative_numeber(tokens: &[char], index: &mut usize) -> Result<Expr> {
 }
 
 fn main() {
-    let input = "2r2";
+    let input = "(22/2)r2 + 2";
 
-    match valid_expression::format_expression(&input) {
+    match valid_expression::valid_expression(&input) {
         Ok(expression) => match parse_expression(&expression) {
             Ok(expr) => {
                 let (result, steps) = evaluate(&expr);
