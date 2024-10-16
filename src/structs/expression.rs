@@ -13,7 +13,6 @@ pub enum Operator {
     Potentiation,
     CalculateRoot,
 }
-
 impl Operator {
     pub fn from_char(c: char) -> Option<Operator> {
         match c {

@@ -12,6 +12,7 @@ pub use self::error::{ClientError, Result};
 use crate::structs::expression::{Expr, Operator};
 
 pub fn parse_expression(input: &str) -> Result<Expr> {
+    println!("{}", input);
     let mut index = 0;
     let tokens: Vec<char> = input.chars().filter(|c| !c.is_whitespace()).collect();
     println!("{:?}", tokens);
@@ -48,18 +49,11 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
                 break;
             }
 
-            if tokens[*index] == '^' {
+            if tokens[*index] == '^' || tokens[*index] == 'r' {
                 *index += 1;
-                right = Expr::Op(
-                    Box::new(right),
-                    next_op,
-                    Box::new(Expr::Number(
-                        tokens[*index]
-                            .to_digit(10)
-                            .expect("Fail parse to number")
-                            .into(),
-                    )),
-                );
+                let number = parse_number(tokens, index)?;
+
+                right = Expr::Op(Box::new(right), next_op, Box::new(number));
                 break;
             }
 
@@ -143,7 +137,7 @@ fn parse_negative_numeber(tokens: &[char], index: &mut usize) -> Result<Expr> {
 }
 
 fn main() {
-    let input = "(22/2)r2 + 2";
+    let input = "-1+(4+5)^2-4";
 
     match valid_expression::valid_expression(&input) {
         Ok(expression) => match parse_expression(&expression) {
