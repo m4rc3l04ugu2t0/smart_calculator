@@ -1,4 +1,4 @@
-use axum::{response::IntoResponse, Json};
+use axum::{http::StatusCode, response::IntoResponse, Json};
 
 use crate::{
     check_expression::valid_expression::valid_expression,
@@ -19,7 +19,8 @@ pub async fn calculate(Json(payload): Json<CalculationRequest>) -> impl IntoResp
                     steps,
                     status: ClientError::Successes,
                 };
-                Json(response).into_response()
+
+                (StatusCode::OK, Json(response).into_response())
             }
             Err(e) => {
                 let response = CalculationResponse {
@@ -27,9 +28,16 @@ pub async fn calculate(Json(payload): Json<CalculationRequest>) -> impl IntoResp
                     result: 0.0,
                     steps: Vec::new(),
                 };
-                Json(response).into_response()
+                (StatusCode::BAD_REQUEST, Json(response).into_response())
             }
         },
-        Err(e) => e.into_response(),
+        Err(e) => {
+            let response = CalculationResponse {
+                result: 0.0,
+                status: e,
+                steps: Vec::new(),
+            };
+            (StatusCode::BAD_REQUEST, Json(response).into_response())
+        }
     }
 }

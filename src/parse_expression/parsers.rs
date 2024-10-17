@@ -25,7 +25,13 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
         *index += 1;
 
         let mut right = match op {
-            Operator::Subtract => parse_negative_numeber(tokens, index),
+            Operator::Subtract => {
+                if tokens[*index] == '(' {
+                    parse_term(tokens, index)
+                } else {
+                    parse_negative_numeber(tokens, index)
+                }
+            }
             _ => parse_term(tokens, index),
         }?;
 
@@ -52,7 +58,13 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
             }
 
             right = match next_op {
-                Operator::Subtract => parse_negative_numeber(tokens, index),
+                Operator::Subtract => {
+                    if tokens[*index] == '(' {
+                        parse_term(tokens, index)
+                    } else {
+                        parse_negative_numeber(tokens, index)
+                    }
+                }
                 _ => parse_expr(tokens, index, next_op.precedence()),
             }?;
         }
