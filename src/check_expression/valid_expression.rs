@@ -1,3 +1,5 @@
+use regex::Regex;
+
 use crate::{ClientError, Result};
 
 pub async fn valid_expression(expression: &str) -> Result<String> {
@@ -63,5 +65,22 @@ pub async fn valid_expression(expression: &str) -> Result<String> {
 
     let new_vec: String = new_vec.iter().collect();
 
-    Ok(new_vec)
+    let formatted_expression = format_expression(&new_vec);
+
+    Ok(formatted_expression)
+}
+pub fn format_expression(expression: &str) -> String {
+    // Remove todos os espaços da expressão
+    let re_spaces = Regex::new(r"\s+").unwrap();
+    let mut expr = re_spaces.replace_all(expression, "").to_string();
+
+    // Adiciona multiplicação implícita antes de parênteses, onde necessário
+    let re_before_parens = Regex::new(r"(\d)\(").unwrap();
+    expr = re_before_parens.replace_all(&expr, "$1*(").to_string();
+
+    // Adiciona multiplicação implícita após parênteses, onde necessário
+    let re_after_parens = Regex::new(r"\)(\d)").unwrap();
+    expr = re_after_parens.replace_all(&expr, ")*$1").to_string();
+
+    expr // Retorna a expressão formatada se for válida
 }

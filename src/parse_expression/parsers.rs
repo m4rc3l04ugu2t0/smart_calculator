@@ -21,9 +21,19 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
         if op.precedence() < min_precedence {
             break;
         }
+
         *index += 1;
 
-        let mut right = parse_term(tokens, index)?;
+        let mut right = match op {
+            Operator::Subtract => {
+                if tokens[*index] == '(' {
+                    parse_term(tokens, index)
+                } else {
+                    parse_negative_numeber(tokens, index)
+                }
+            }
+            _ => parse_term(tokens, index),
+        }?;
 
         while *index < tokens.len() {
             let next_op = match Operator::from_char(tokens[*index]) {
@@ -35,30 +45,33 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
                 break;
             }
 
-            if tokens[*index] == '^' {
+            if tokens[*index] == '^' || tokens[*index] == 'r' {
                 *index += 1;
-                right = Expr::Op(
-                    Box::new(right),
-                    next_op,
-                    Box::new(Expr::Number(
-                        tokens[*index]
-                            .to_digit(10)
-                            .expect("Fail parse to number")
-                            .into(),
-                    )),
-                );
+                let number = parse_number(tokens, index)?;
+
+                right = Expr::Op(Box::new(right), next_op, Box::new(number));
                 break;
             }
 
-            if tokens[*index] == '*' || tokens[*index] == '/' {
+            if tokens[*index] == '*' {
                 *index -= 1;
             }
 
-            right = parse_expr(tokens, index, next_op.precedence())?;
+            right = match next_op {
+                Operator::Subtract => {
+                    if tokens[*index] == '(' {
+                        parse_term(tokens, index)
+                    } else {
+                        parse_negative_numeber(tokens, index)
+                    }
+                }
+                _ => parse_expr(tokens, index, next_op.precedence()),
+            }?;
         }
 
         left = Expr::Op(Box::new(left), op, Box::new(right));
     }
+    println!("Expr finaly: {:?}", left);
 
     Ok(left)
 }
@@ -91,10 +104,7 @@ fn parse_term(tokens: &[char], index: &mut usize) -> Result<Expr> {
 fn parse_number(tokens: &[char], index: &mut usize) -> Result<Expr> {
     let mut start = *index;
 
-    if (start == 0 && tokens[start] == '-')
-        || (tokens[start] == '-' && tokens[*index - 1] == '^')
-        || (tokens[start] == '-' && tokens[*index - 1] == '*')
-    {
+    if *index < tokens.len() && tokens[start] == '-' {
         *index += 1;
         start = *index;
     }
@@ -104,16 +114,24 @@ fn parse_number(tokens: &[char], index: &mut usize) -> Result<Expr> {
     }
 
     let number_str: String = if start > 0 && tokens[start - 1] == '-' {
-        let number = if start == 1 || tokens[start - 2] == '^' || tokens[start - 2] == '*' {
-            ["-", &tokens[start..*index].iter().collect::<String>()].concat()
-        } else {
-            tokens[start..*index].iter().collect()
-        };
-
-        number
+        ["-", &tokens[start..*index].iter().collect::<String>()].concat()
     } else {
         tokens[start..*index].iter().collect()
     };
+
+    let number: f64 = number_str.parse()?;
+
+    Ok(Expr::Number(number))
+}
+
+fn parse_negative_numeber(tokens: &[char], index: &mut usize) -> Result<Expr> {
+    let start = *index;
+
+    while *index < tokens.len() && (tokens[*index].is_digit(10) || tokens[*index] == '.') {
+        *index += 1;
+    }
+
+    let number_str: String = tokens[start..*index].iter().collect();
 
     let number: f64 = number_str.parse()?;
 
