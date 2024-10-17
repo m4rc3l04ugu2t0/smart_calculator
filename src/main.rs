@@ -13,6 +13,7 @@ pub use self::error::{ClientError, Result};
 
 #[tokio::main]
 async fn main() -> Result<()> {
+    println!("{}", 2 - (-2));
     let app = Router::new().route("/calculate", post(calculate));
 
     let listener = TcpListener::bind("0.0.0.0:3001").await.unwrap();
