@@ -35,7 +35,13 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
         *index += 1;
 
         let mut right = match op {
-            Operator::Subtract => parse_negative_numeber(tokens, index),
+            Operator::Subtract => {
+                if tokens[*index] == '(' {
+                    parse_term(tokens, index)
+                } else {
+                    parse_negative_numeber(tokens, index)
+                }
+            }
             _ => parse_term(tokens, index),
         }?;
 
@@ -62,7 +68,13 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
             }
 
             right = match next_op {
-                Operator::Subtract => parse_negative_numeber(tokens, index),
+                Operator::Subtract => {
+                    if tokens[*index] == '(' {
+                        parse_term(tokens, index)
+                    } else {
+                        parse_negative_numeber(tokens, index)
+                    }
+                }
                 _ => parse_expr(tokens, index, next_op.precedence()),
             }?;
         }
@@ -137,20 +149,7 @@ fn parse_negative_numeber(tokens: &[char], index: &mut usize) -> Result<Expr> {
 }
 
 fn main() {
-    let test_expressions = vec![
-        "-1+(4+5)^2-4",  // Expressão com número negativo, adição, potência e subtração
-        "2(3+4)",        // Multiplicação implícita
-        "(2+2)r3",       // Raiz cúbica
-        "(3^2)r5",       // Raiz de quinto grau após potência
-        "5+3*2-1",       // Expressão simples com operadores básicos
-        "(1+1)/2",       // Divisão por zero
-        "((2+3)*(4-1))", // Parênteses aninhados
-        "-2-2",          // Subtração com números negativos
-        "2+(-3*4)",      // Operação com número negativo dentro de parênteses
-        "(4+5)^2/2",     // Potência seguida de divisão por zero
-        "2^(3+1)",       // Potência com expressão dentro
-        "27r4",
-    ];
+    let test_expressions = vec!["7-(-3)"];
 
     for input in test_expressions {
         println!("Testando a expressão: {}", input);
