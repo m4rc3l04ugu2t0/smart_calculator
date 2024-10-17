@@ -149,6 +149,7 @@ fn main() {
         "2+(-3*4)",      // Operação com número negativo dentro de parênteses
         "(4+5)^2/2",     // Potência seguida de divisão por zero
         "2^(3+1)",       // Potência com expressão dentro
+        "27r4",
     ];
 
     for input in test_expressions {
