@@ -20,11 +20,10 @@ pub fn evaluate(expr: &Expr) -> (f64, Vec<String>) {
                     }
                 }
                 Operator::CalculateRoot => {
-                    if left_val.is_sign_positive() {
-                        left_val.powf(1.0 / right_val)
-                    } else {
-                        return (0.0, vec!["Raiz negativa".to_string()]);
+                    if left_val.is_sign_negative() {
+                        return (0.0, vec!["Negative Root!".to_string()]);
                     }
+                    left_val.powf(1.0 / right_val)
                 }
             };
 

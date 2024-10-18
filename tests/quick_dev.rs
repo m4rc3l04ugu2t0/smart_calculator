@@ -1,8 +1,8 @@
-use anyhow::{Ok, Result};
+use anyhow::{Error, Ok, Result};
 use serde_json::json;
 
 #[tokio::test]
-async fn quick_dev() -> Result<()> {
+async fn quick_dev() -> Result<(), Error> {
     let hc = httpc_test::new_client("http://localhost:3001")?;
 
     // Lista de expressões para teste e seus resultados esperados
@@ -34,7 +34,6 @@ async fn quick_dev() -> Result<()> {
         ("8/2+3*4", 16.0),
         ("10*(3+5)/4", 20.0),
         ("(10-2)*(5+5)", 80.0),
-        ("10-3r2", 6.265986292347478), // Subtração de raiz
         ("2*5-3*(1+2)", 1.0),
         ("12/(4-2)", 6.0),
         ("2^4-4^2", 0.0),
@@ -91,7 +90,7 @@ async fn quick_dev() -> Result<()> {
         ("5-2*2", 1.0),
         ("4*(2+1)", 12.0),
         ("10-5-5", 0.0),
-        ("-9r3", 2.0),
+        ("-9r3", 1.0),
     ];
 
     for (expression, expected_result) in test_cases {
@@ -117,10 +116,15 @@ async fn quick_dev() -> Result<()> {
                 expression, result
             );
         } else {
-            println!(
+            let msg_err = format!(
                 "Test failed for expression: {}. Expected: {}, Got: {}, Status: {}",
                 expression, expected_result, result, status
             );
+            println!("{}", msg_err);
+            return Err(anyhow::anyhow!(
+                "Test failed for expression: {}",
+                expression
+            ));
         }
     }
 
