@@ -13,7 +13,7 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
     let mut left = parse_term(tokens, index)?;
 
     while *index < tokens.len() {
-        let op = match Operator::from_char(tokens[*index]) {
+        let mut op = match Operator::from_char(tokens[*index]) {
             Some(op) => op,
             None => break,
         };
@@ -29,7 +29,8 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
                 if tokens[*index] == '(' {
                     parse_term(tokens, index)
                 } else {
-                    parse_negative_numeber(tokens, index)
+                    op = Operator::Add;
+                    parse_expr(tokens, index, op.precedence())
                 }
             }
             _ => parse_term(tokens, index),
@@ -53,7 +54,7 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
                 break;
             }
 
-            if tokens[*index] == '*' {
+            if tokens[*index] == '*' || tokens[*index] == '/' {
                 *index -= 1;
             }
 

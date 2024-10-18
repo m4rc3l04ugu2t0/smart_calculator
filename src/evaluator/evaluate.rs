@@ -19,7 +19,13 @@ pub fn evaluate(expr: &Expr) -> (f64, Vec<String>) {
                         left_val.powf(right_val)
                     }
                 }
-                Operator::CalculateRoot => left_val.powf(1.0 / right_val),
+                Operator::CalculateRoot => {
+                    if left_val.is_sign_positive() {
+                        left_val.powf(1.0 / right_val)
+                    } else {
+                        return (0.0, vec!["Raiz negativa".to_string()]);
+                    }
+                }
             };
 
             let step = format!("{} {} {} = {}", left_val, op.to_string(), right_val, result);
