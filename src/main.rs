@@ -150,7 +150,7 @@ fn parse_negative_numeber(tokens: &[char], index: &mut usize) -> Result<Expr> {
 }
 
 fn main() {
-    let test_expressions = vec!["5(-2/2)"];
+    let test_expressions = vec!["2+2"];
 
     for input in test_expressions {
         println!("Testando a expressão: {}", input);
