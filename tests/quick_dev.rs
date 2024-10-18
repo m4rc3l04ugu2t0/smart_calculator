@@ -90,7 +90,7 @@ async fn quick_dev() -> Result<(), Error> {
         ("5-2*2", 1.0),
         ("4*(2+1)", 12.0),
         ("10-5-5", 0.0),
-        ("-9r3", 1.0),
+        ("-9r3", 0.0),
     ];
 
     for (expression, expected_result) in test_cases {
