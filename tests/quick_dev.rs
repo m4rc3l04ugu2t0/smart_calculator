@@ -3,7 +3,7 @@ use serde_json::json;
 
 #[tokio::test]
 async fn quick_dev() -> Result<()> {
-    let hc = httpc_test::new_client("http://localhost:3001")?;
+    let hc = httpc_test::new_client("http://localhost:3000")?;
 
     // Lista de expressões para teste e seus resultados esperados
     let test_cases = vec![
@@ -116,10 +116,12 @@ async fn quick_dev() -> Result<()> {
                 expression, result
             );
         } else {
-            println!(
+            let msg = format!(
                 "Test failed for expression: {}. Expected: {}, Got: {}, Status: {}",
                 expression, expected_result, result, status
             );
+            println!("{}", msg);
+            return Err(anyhow::anyhow!(msg));
         }
     }
 

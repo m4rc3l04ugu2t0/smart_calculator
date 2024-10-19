@@ -13,7 +13,7 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
     let mut left = parse_term(tokens, index)?;
 
     while *index < tokens.len() {
-        let op = match Operator::from_char(tokens[*index]) {
+        let mut op = match Operator::from_char(tokens[*index]) {
             Some(op) => op,
             None => break,
         };
@@ -29,14 +29,15 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
                 if tokens[*index] == '(' {
                     parse_term(tokens, index)
                 } else {
-                    parse_negative_numeber(tokens, index)
+                    op = Operator::Add;
+                    parse_expr(tokens, index, op.precedence())
                 }
             }
             _ => parse_term(tokens, index),
         }?;
 
         while *index < tokens.len() {
-            let next_op = match Operator::from_char(tokens[*index]) {
+            let mut next_op = match Operator::from_char(tokens[*index]) {
                 Some(next_op) => next_op,
                 None => break,
             };
@@ -53,7 +54,7 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
                 break;
             }
 
-            if tokens[*index] == '*' {
+            if tokens[*index] == '*' || tokens[*index] == '/' {
                 *index -= 1;
             }
 
@@ -62,7 +63,8 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
                     if tokens[*index] == '(' {
                         parse_term(tokens, index)
                     } else {
-                        parse_negative_numeber(tokens, index)
+                        next_op = Operator::Add;
+                        parse_expr(tokens, index, next_op.precedence())
                     }
                 }
                 _ => parse_expr(tokens, index, next_op.precedence()),
@@ -71,7 +73,6 @@ fn parse_expr(tokens: &[char], index: &mut usize, min_precedence: u8) -> Result<
 
         left = Expr::Op(Box::new(left), op, Box::new(right));
     }
-    println!("Expr finaly: {:?}", left);
 
     Ok(left)
 }
@@ -86,18 +87,16 @@ fn parse_term(tokens: &[char], index: &mut usize) -> Result<Expr> {
         '(' => {
             *index += 1;
             let expr = parse_expr(tokens, index, 0)?;
-
-            if *index <= tokens.len() - 1 && tokens[*index - 1] == '^' {
-                *index += 1;
-            }
-
             if *index >= tokens.len() || tokens[*index] != ')' {
                 return Err(ClientError::ExpectedClosingParenthesis);
             }
             *index += 1;
             Ok(expr)
         }
-        _ => Err(ClientError::UnexpectedCharacter(tokens[*index].into())),
+        _ => Err(ClientError::UnexpectedCharacter(format!(
+            "Unexpected character '{}'",
+            tokens[*index]
+        ))),
     }
 }
 
@@ -118,20 +117,6 @@ fn parse_number(tokens: &[char], index: &mut usize) -> Result<Expr> {
     } else {
         tokens[start..*index].iter().collect()
     };
-
-    let number: f64 = number_str.parse()?;
-
-    Ok(Expr::Number(number))
-}
-
-fn parse_negative_numeber(tokens: &[char], index: &mut usize) -> Result<Expr> {
-    let start = *index;
-
-    while *index < tokens.len() && (tokens[*index].is_digit(10) || tokens[*index] == '.') {
-        *index += 1;
-    }
-
-    let number_str: String = tokens[start..*index].iter().collect();
 
     let number: f64 = number_str.parse()?;
 
