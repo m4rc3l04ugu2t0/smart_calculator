@@ -7,7 +7,10 @@ async fn quick_dev() -> Result<()> {
 
     // Lista de expressões para teste e seus resultados esperados
     let test_cases = vec![
-        ("2+2", 4.0),
+        ("-(2-2)", 0.0),
+        ("-(-2-2)", 4.0),
+        ("-(-2+2)", 0.0),
+        ("-(2+2)", 4.2),
         ("10-5", 5.0),
         ("3*3", 9.0),
         ("8/4", 2.0),
@@ -91,6 +94,7 @@ async fn quick_dev() -> Result<()> {
         ("4*(2+1)", 12.0),
         ("10-5-5", 0.0),
         ("-9r3", 0.0),
+        ("-(4)", -4.0),
     ];
 
     for (expression, expected_result) in test_cases {
