@@ -64,7 +64,9 @@ pub fn valid_expression(expression: &str) -> Result<String> {
 
     let new_vec: String = new_vec.iter().collect();
 
-    let formatted_expression = format_expression(&new_vec);
+    let formatterd = transform_negation(&new_vec);
+
+    let formatted_expression = format_expression(&formatterd);
 
     Ok(formatted_expression)
 }
@@ -82,4 +84,31 @@ pub fn format_expression(expression: &str) -> String {
     expr = re_after_parens.replace_all(&expr, ")*$1").to_string();
 
     expr // Retorna a expressão formatada se for válida
+}
+
+fn transform_negation(input: &str) -> String {
+    // Expressão regular para capturar -(expressão dentro de parênteses)
+    let re = Regex::new(r"-\(([^()]+)\)").unwrap();
+
+    // Substituir todos os padrões encontrados por uma nova expressão com sinais invertidos
+    re.replace_all(input, |caps: &regex::Captures| {
+        let inner_expr = &caps[1];
+
+        // Inverter os sinais dentro da expressão
+        let transformed = inner_expr
+            .chars()
+            .map(|c| match c {
+                '+' => '-',
+                '-' => '+',
+                _ => c,
+            })
+            .collect::<String>();
+
+        // Retornar a expressão transformada sem o parêntese
+        if transformed.starts_with('+') {
+            return transformed[1..].to_string();
+        }
+        transformed
+    })
+    .to_string()
 }
