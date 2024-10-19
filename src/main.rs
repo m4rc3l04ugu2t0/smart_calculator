@@ -17,7 +17,7 @@ async fn main() -> Result<()> {
     let port = var("PORT")
         .ok()
         .and_then(|p| p.parse::<u16>().ok())
-        .unwrap_or(8000);
+        .unwrap_or(3000);
 
     let app = Router::new().route("/calculate", post(calculate));
 
