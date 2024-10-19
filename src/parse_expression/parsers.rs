@@ -83,7 +83,7 @@ fn parse_term(tokens: &[char], index: &mut usize) -> Result<Expr> {
     }
 
     match tokens[*index] {
-        '0'..='9' | '-' => parse_number(tokens, index),
+        '0'..='9' | '-' | '+' => parse_number(tokens, index),
         '(' => {
             *index += 1;
             let expr = parse_expr(tokens, index, 0)?;

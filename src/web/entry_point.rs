@@ -12,7 +12,6 @@ pub async fn calculate(Json(payload): Json<CalculationRequest>) -> impl IntoResp
     match valid_expression(&payload.expression).await {
         Ok(expression) => match parse_expression(&expression) {
             Ok(expr) => {
-                println!("{}", expression);
                 let (result, steps) = evaluate(&expr);
                 let response = CalculationResponse {
                     result,

@@ -44,14 +44,9 @@ pub async fn valid_expression(expression: &str) -> Result<String> {
                 new_vec.push(ch);
             }
             '0'..='9' => {
-                println!("previus: {}", previous_char);
                 // Adiciona um '+' antes de números que não possuem sinal
-                if previous_char == ' ' || "(".contains(previous_char) {
-                    new_vec.push('+');
-                    new_vec.push(ch);
-                } else {
-                    new_vec.push(ch);
-                }
+
+                new_vec.push(ch);
             }
             '.' => {
                 new_vec.push(ch);
@@ -71,6 +66,7 @@ pub async fn valid_expression(expression: &str) -> Result<String> {
 
     let new_vec: String = new_vec.iter().collect();
     let formatted_expression = format_expression(&new_vec);
+    println!("{}", formatted_expression);
 
     Ok(formatted_expression)
 }
@@ -89,13 +85,11 @@ pub fn format_expression(expression: &str) -> String {
     expr = re_after_parens.replace_all(&expr, ")*$1").to_string();
 
     let expr = transform_negation(&expr);
-    println!("{}", expr);
 
     expr // Retorna a expressão formatada se for válida
 }
 
 fn transform_negation(input: &str) -> String {
-    println!("{}", input);
     // Expressão regular para capturar -(expressão dentro de parênteses)
     let re = Regex::new(r"-\(([^()]+)\)").unwrap();
 
@@ -112,6 +106,10 @@ fn transform_negation(input: &str) -> String {
                 _ => c,     // Mantém outros caracteres
             })
             .collect::<String>();
+
+        if transformed.starts_with('+') {
+            return transformed[1..].to_string();
+        }
 
         // Retornar a expressão transformada com o sinal de menos aplicado corretamente
         transformed
