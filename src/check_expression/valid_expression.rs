@@ -45,8 +45,12 @@ pub async fn valid_expression(expression: &str) -> Result<String> {
             }
             '0'..='9' => {
                 // Adiciona um '+' antes de números que não possuem sinal
-
-                new_vec.push(ch);
+                if "(".contains(previous_char) {
+                    new_vec.push('+');
+                    new_vec.push(ch);
+                } else {
+                    new_vec.push(ch);
+                }
             }
             '.' => {
                 new_vec.push(ch);
