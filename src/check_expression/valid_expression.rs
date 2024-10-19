@@ -67,8 +67,6 @@ pub async fn valid_expression(expression: &str) -> Result<String> {
 
     let formatted_expression = format_expression(&new_vec);
 
-    println!("uai {}", formatted_expression);
-
     Ok(formatted_expression)
 }
 pub fn format_expression(expression: &str) -> String {

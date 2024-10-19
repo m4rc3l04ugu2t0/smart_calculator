@@ -6,7 +6,7 @@ use crate::ClientError;
 pub struct CalculationResponse {
     pub result: f64,
     pub steps: Vec<String>,
-    pub error: ClientError,
+    pub status: ClientError,
 }
 
 #[derive(Deserialize)]

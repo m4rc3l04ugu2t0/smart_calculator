@@ -1,4 +1,5 @@
 use anyhow::{Ok, Result};
+use colored::*;
 use serde_json::json;
 
 #[tokio::test]
@@ -95,6 +96,7 @@ async fn quick_dev() -> Result<()> {
         ("10-5-5", 0.0),
         ("-9r3", 0.0),
         ("-(4)", -4.0),
+        ("-(-1)", 1.0),
     ];
 
     for (expression, expected_result) in test_cases {
@@ -105,24 +107,42 @@ async fn quick_dev() -> Result<()> {
             }),
         );
 
+        let check = "✔".green();
+
         let response = calc.await?;
-        let response_json = response.json_body().expect("kks");
+        let response_json = response.json_body().map_err(|e| e)?;
 
         // Obtém o resultado do JSON
         let result = response_json["result"].as_f64().unwrap_or(0.0);
         let status = response_json["status"].as_str().unwrap_or("Unknown");
 
-        println!("{}", status);
         // Verifica se o resultado está correto
         if (result - expected_result).abs() < 1e-9 {
             println!(
-                "Test passed for expression: {} with result: {}",
-                expression, result
+                "{} Test passed for expression: {} with result: {}",
+                check,
+                expression.green(),
+                result
             );
+            // Obtém o array "steps" do JSON
+            if let Some(steps) = response_json["steps"].as_array() {
+                for (i, step) in steps.iter().enumerate() {
+                    // Exibe cada passo em azul
+                    println!("{}", format!("Step {}: {:?}", i + 1, step).blue());
+                }
+            } else {
+                // Mensagem em amarelo se não houver passos
+                println!("{}", "No steps available".yellow());
+            }
+
+            println!("{}", format!("Result: {}", result).cyan());
         } else {
             let msg = format!(
-                "Test failed for expression: {}. Expected: {}, Got: {}, Status: {}",
-                expression, expected_result, result, status
+                "✖ Test failed for expression: {}. Expected: {}, Got: {}, Status: {}",
+                expression.green(),
+                expected_result,
+                result,
+                status
             );
             println!("{}", msg);
             return Err(anyhow::anyhow!(msg));
